@@ -1,0 +1,20 @@
+server:
+  port: ${SERVER_PORT:8708}
+  
+eureka:
+  client:
+    registry-fetch-interval-seconds: 3
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+spring:
+  rabbitmq:
+    host: ${RABBIT_MQ_HOST:localhost}
+    port: ${RABBIT_MQ_PORT:5672}
+    username: guest
+    password: guest
+  cloud:
+    stream:
+      bindings:
+        input:
+          destination: transaction-queue

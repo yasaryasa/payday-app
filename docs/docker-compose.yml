@@ -1,0 +1,272 @@
+version: '3.1'
+
+networks:
+  paydaybank:
+    name: paydaybank 
+    driver: bridge
+
+services:
+#######################  Other Services  ##################################
+  cn-paydayrabbitmq:
+    image: rabbitmq:3-management
+    container_name: paydayrabbitmq
+    networks:
+      - paydaybank
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      - DEFAULT_USER=payday
+      - DEFAULT_PASS=payday
+      
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.1.1
+    container_name: zookeeper
+    restart: unless-stopped
+    networks:
+      - paydaybank
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    healthcheck:
+      test: "echo stat | nc localhost $$ZOOKEEPER_CLIENT_PORT"
+      start_period: 30s
+
+  kafka:
+    image: confluentinc/cp-kafka:6.1.1
+    container_name: kafka
+    restart: unless-stopped
+    networks:
+      - paydaybank
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9092" ]
+      start_period: 30s
+
+#  kafka-rest-proxy:
+#    image: confluentinc/cp-kafka-rest:6.1.1
+#    container_name: kafka-rest-proxy
+#    restart: unless-stopped
+#    networks:
+#      - paydaybank
+#    depends_on:
+#      - zookeeper
+#      - kafka
+#    ports:
+#      - "8082:8082"
+#    environment:
+#      KAFKA_REST_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+#      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+#      KAFKA_REST_HOST_NAME: kafka-rest-proxy
+#      KAFKA_REST_LISTENERS: http://0.0.0.0:8082
+#      KAFKA_REST_CONSUMER_REQUEST_TIMEOUT_MS: 30000
+#    healthcheck:
+#      test: "curl -f http://localhost:8082 || exit 1"
+#      start_period: 30s
+#
+#  kafka-topics-ui:
+#    image: landoop/kafka-topics-ui:0.9.4
+#    container_name: kafka-topics-ui
+#    restart: unless-stopped
+#    networks:
+#      - paydaybank
+#    depends_on:
+#      - kafka-rest-proxy
+#    ports:
+#      - "8085:8000"
+#    environment:
+#      KAFKA_REST_PROXY_URL: http://kafka-rest-proxy:8082
+#      PROXY: "true"
+#    healthcheck:
+#      test: "wget --quiet --tries=1 --spider http://localhost:8000 || exit 1"
+#      start_period: 30s
+#
+#  zipkin:
+#    image: openzipkin/zipkin:2.23.2
+#    container_name: zipkin
+#    restart: unless-stopped
+#    networks:
+#      - paydaybank
+#    ports:
+#      - "9411:9411"
+#    healthcheck:
+#      test: [ "CMD", "nc", "-z", "localhost", "9411" ]
+#      start_period: 30s
+#
+#  kafka-manager:
+#    image: hlebalbau/kafka-manager:3.0.0.5
+#    container_name: kafka-manager
+#    restart: unless-stopped
+#    networks:
+#      - paydaybank
+#    depends_on:
+#      - zookeeper
+#    ports:
+#      - "9000:9000"
+#    environment:
+#      ZK_HOSTS: zookeeper:2181
+#      APPLICATION_SECRET: "random-secret"
+#    command: -Dpidfile.path=/dev/null
+#    healthcheck:
+#      test: "curl -f http://localhost:9000 || exit 1"
+#      start_period: 30s
+      
+#######################  Local Services  ################################## 
+  cn-config-server:
+    image: payday/config-server:0.0.1-SNAPSHOT
+    container_name: config-server
+    restart: always
+    networks:
+      - paydaybank
+    ports:
+      - '8888:8888'
+    healthcheck:
+      test: "curl --f --s http://localhost:8888/actuator/health || exit 1"
+      interval: 20s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+    
+  cn-eureka-server:
+    image: payday/eureka-server:0.0.1-SNAPSHOT
+    container_name: eureka-server
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+    ports:
+      - '8761:8761'
+    depends_on:
+      - cn-config-server
+    
+  cn-gateway-server:
+    image: payday/gateway-server:0.0.1-SNAPSHOT
+    container_name: gateway-server
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      EUREKA_SERVER_URL: http://cn-eureka-server:8761/eureka/
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+    ports:
+      - '8081:8081'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server
+    
+  cn-transaction-service:
+    image: payday/transaction-service:0.0.1-SNAPSHOT
+    container_name: transaction-service
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+      EUREKA_SERVER_URL: http://cn-eureka-server:8761/eureka/
+      SERVER_PORT: 8701
+      RABBIT_MQ_HOST: cn-paydayrabbitmq
+      RABBIT_MQ_PORT: 5672
+    ports:
+      - '8701:8701'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server
+      - cn-paydayrabbitmq
+#      
+  cn-stocks-service:
+    image: payday/stocks-service:0.0.1-SNAPSHOT
+    container_name: stocks-service
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+      EUREKA_SERVER_URL: http://cn-eureka-server:8761/eureka/
+      SERVER_PORT: 8702
+    ports:
+      - '8702:8702'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server
+##
+  cn-stocks-simulation-service:
+    image: payday/stocks-simulation-service:2.5.2
+    container_name: stocks-simulation-service
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+      EUREKA_SERVER_URL: http://cn-eureka-server:8761/eureka/
+      SERVER_PORT: 8703
+    ports:
+      - '8703:8703'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server
+      - kafka
+##      
+  cn-transaction-queue-service:
+    image: payday/transaction-queue-service:0.0.1-SNAPSHOT
+    container_name: transaction-queue-service
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+      EUREKA_SERVER_URL: http://cn-eureka-server:8761/eureka/
+      SERVER_PORT: 8704
+      RABBIT_MQ_HOST: cn-paydayrabbitmq
+      RABBIT_MQ_PORT: 5672
+    ports:
+      - '8704:8704'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server
+      - cn-paydayrabbitmq
+##
+  cn-user-stocks-service:
+    image: payday/user-stocks-service:0.0.1-SNAPSHOT
+    container_name: user-stocks-service
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+      CONFIG_SERVER_URL: http://cn-config-server:8888
+      EUREKA_SERVER_URL: http://cn-eureka-server:8761/eureka/
+      SERVER_PORT: 8705
+    ports:
+      - '8705:8705'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server
+
+  cn-stocks-client:
+    image: payday/stocks-client:0.0.1-SNAPSHOT
+    container_name: stocks-client
+    restart: always
+    networks:
+      - paydaybank
+    environment:
+#      ZIPKIN_HOST: zipkin
+#      ZIPKIN_PORT: 9411
+      SERVER_PORT: 8080
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+      GATEWAY_URL: http://gateway-server:8081
+    ports:
+      - '8080:8080'
+    depends_on: 
+      - cn-eureka-server
+      - cn-config-server

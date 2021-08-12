@@ -1,0 +1,20 @@
+server:
+  port: ${SERVER_PORT:8705}
+  
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      
+ldap:
+  urls: ldap://localhost:389/
+  base: dc=paydaybank,dc=com
+  dn:   cn=admin,dc=paydaybank,dc=com
+  pass: admin
+
+
+security:
+  jwt:
+    token:
+      secret-key: secret
+      expire-length: 1800000

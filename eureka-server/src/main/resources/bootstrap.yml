@@ -1,0 +1,17 @@
+#config file name
+spring:
+  application:
+    name: eureka-server
+#config url    
+  cloud:
+    config:
+      failFast: true
+      retry:
+        initialInterval: 3000
+        multiplier: 1.3
+        maxInterval: 10000
+        maxAttempts: 20
+      profile: native
+      uri: ${CONFIG_SERVER_URL:http://localhost:8888}
+#eureka:
+#  instance:#    prefer-ip-address: true

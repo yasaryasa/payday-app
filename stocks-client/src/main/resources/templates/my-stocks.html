@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Payday App</title>
+	<!--Import Google Icon Font-->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<!--Import materialize.css-->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<!--Let browser know website is optimized for mobile-->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<style>
+		body {
+			display: flex;
+			min-height: 100vh;
+			flex-direction: column;
+		}
+
+		main {
+			flex: 1 0 auto;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- Header -->
+	<div th:insert="fragments/header :: header"></div>
+
+	<main>
+		<div class="container">
+			<div class="row">
+				<div class="col s8">
+					<div th:switch="${stocks}">
+						<h2 th:case="null">No Stocks for you!</h2>
+						<div th:case="*">
+							<h2>Your Stocks</h2>
+							<table class="striped" id="ownerStocks">
+								<thead>
+									<tr>
+										<th>Stock Symbol</th>
+										<th>Stock Name</th>
+										<th>Amount</th>
+										<th>Price</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="s : ${stocks}">
+										<td th:text="${s.stockCode}"></td>
+										<td th:text="${s.stockName}"></td>
+										<td th:text="${s.amount}"></td>
+										<td th:text="${s.price}"></td>
+										<td><button class="btn btn-primary sellBtn">Sell</button></td>
+										<!--<td><a class="myBtn" th:href="@{/action/sell/{id}(id=${s.stockCode})}">Sell</a></td>-->
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="col s4">
+					<h2>Sell Stock</h2>
+					<div class="row">
+						<form id="sellForm" class="col s12">
+							<div class="row">
+								<div class="input-field col s6">
+									<input disabled placeholder=" " id="stockCode" type="text" class="validate" />
+									<label for="stockCode">Stock Symbol</label>
+								</div>
+								<div class="input-field col s6">
+									<input disabled placeholder=" " id="stockName" type="text" class="validate" />
+									<label for="stockName">Stock Name</label>
+								</div>
+							</div>
+							<div class="row">
+								<div class="input-field col s12">
+									<input placeholder=" " id="stockPrice" type="text" class="validate" />
+									<label for="stockPrice">Price</label>
+								</div>
+							</div>
+							<div class="row">
+								<div class="input-field col s12">
+									<input placeholder=" " id="stockAmount" type="text" class="validate" value="5" />
+									<label for="stockAmount">Amount</label>
+								</div>
+							</div>
+							<div class="row">
+								<div class="center-align">
+									<button class="btn waves-effect waves-light btn-small" style="width: 100%;"
+										type="submit">Sell
+									</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</main>
+
+	<!-- Footer -->
+	<div th:insert="fragments/footer :: footer"></div>
+
+	<!--JavaScript at end of body for optimized loading-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+	<script src="/my-stocks.js"></script>
+
+</body>
+
+</html>

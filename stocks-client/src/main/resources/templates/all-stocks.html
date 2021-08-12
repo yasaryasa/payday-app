@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Payday App</title>
+	<!--Import Google Icon Font-->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+	<!--Import materialize.css-->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+	<!--Let browser know website is optimized for mobile-->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<style>
+		body {
+			display: flex;
+			min-height: 100vh;
+			flex-direction: column;
+		}
+
+		main {
+			flex: 1 0 auto;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- Header -->
+	<div th:insert="fragments/header :: header"></div>
+
+	<main>
+		<div class="container">
+			<div class="row">
+				<div class="col s8">
+					<h2>All Stocks</h2>
+					<table id="stockList" class="striped">
+						<thead>
+							<tr>
+								<th scope="col">Stock Symbol</th>
+								<th scope="col">Stock Name</th>
+								<th scope="col">Price</th>
+								<th scope="col">Update Time</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+				<div class="col s4">
+					<h2>Buy Stock</h2>
+					<div class="row">
+						<form id="buyForm" class="col s12">
+							<div class="row">
+								<div class="input-field col s6">
+									<input disabled placeholder=" " id="stockCode" type="text" class="validate"/>
+                                	<label for="stockCode">Stock Symbol</label>
+                            	</div>
+	                            <div class="input-field col s6">
+	                                <input disabled placeholder=" " id="stockName" type="text" class="validate"/>
+	                                <label for="stockName">Stock Name</label>
+	                            </div>
+                        	</div>
+                        	<div class="row">
+	                            <div class="input-field col s12">
+	                                <input disabled placeholder=" " id="stockPrice" type="text" class="validate"/>
+	                                <label for="stockPrice">Price</label>
+	                            </div>
+                        	</div>
+                        	<div class="row">
+	                            <div class="input-field col s12">
+	                                <input placeholder=" " id="stockAmount" type="text" class="validate" value="5"/>
+	                                <label for="stockAmount">Amount</label>
+	                            </div>
+                        	</div>
+	                        <div class="row">
+	                            <div class="center-align">
+	                                <button class="btn waves-effect waves-light btn-small" style="width: 100%;" type="submit">Buy
+	                                </button>
+	                            </div>
+	                        </div>
+                    	</form>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col s12">
+					<table id="comments" class="striped">
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<!-- Footer -->
+	<div th:insert="fragments/footer :: footer"></div>
+
+	<!--JavaScript at end of body for optimized loading-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+	<script src="/stocks.js"></script>
+
+</body>
+
+</html>

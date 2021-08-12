@@ -1,0 +1,38 @@
+server:
+  port: ${SERVER_PORT:8702}
+  
+eureka:
+  client:
+    registry-fetch-interval-seconds: 3
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+
+spring:
+  cloud:
+    loadbalancer:
+      ribbon:
+        enable: false
+    stream:
+      source: prices
+      kafka:
+        binder:
+          brokers: kafka
+          auto-add-partitions: true
+      bindings:
+        prices-out-0:
+          destination: com.payday.stocks
+          content-type: application/json
+          producer:
+            partition-key-expression: headers['partitionKey']
+            partition-count: 1
+  sleuth:
+    sampler:
+      probability: 1.0
+
+management:
+  endpoints:
+    web:
+      exposure.include: beans, env, health, info, metrics, mappings
+  endpoint:
+    health:
+      show-details: always

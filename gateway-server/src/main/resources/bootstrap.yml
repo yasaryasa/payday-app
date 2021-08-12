@@ -1,0 +1,41 @@
+server:
+  port: ${SERVER_PORT:8081}
+  
+#config file name
+spring:
+  profiles:
+    active: ${PROFILE:DEV}
+  application:
+    name: gateway-server#config url    
+  cloud:
+    gateway:
+      discovery.locator.enabled: true
+      routes:
+        - id: stock-service
+          uri: lb://STOCKS-SERVICE
+          predicates:
+            Path=/stocks/**
+        - id: transaction-service
+          uri: lb://TRANSACTION-SERVICE
+          predicates:
+            Path=/transaction/**
+        - id: user-stocks-service
+          uri: lb://USER-STOCKS-SERVICE
+          predicates:
+            Path=/user-stocks/**
+#          filters:
+#            - AuthFilter
+
+
+management:
+  endpoint:    gateway:      enabled: true
+  endpoints:    web:      exposure:        include:        - "*"
+
+eureka:
+  client:
+    fetch-registry: true
+    registry-fetch-interval-seconds: 3
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    preferIpAddress: true

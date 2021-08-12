@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: stocks-client
+  cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:29092}
+          auto-add-partitions: true
+          min-partition-count: 1
+      bindings:
+        prices-in-0:
+          destination: com.payday.stocks
+          content-type: application/json
+          consumer:
+            max-attempts: 1
+            back-off-ınitial-ınterval: 3000
+#  sleuth:
+#    sampler:
+#      probability: 1.0
+#  zipkin:
+#    baseUrl: http://${ZIPKIN_HOST:localhost}:${ZIPKIN_PORT:9411}
+#    sender.type: web
+    
+    
+management:
+  endpoints:
+    web:
+      exposure.include: beans, env, health, info, metrics, mappings
+  endpoint:
+    health:
+      show-details: always
+
+base-url: ${GATEWAY-URL:http://localhost:8081}
